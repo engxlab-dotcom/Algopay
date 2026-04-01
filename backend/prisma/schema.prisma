@@ -1,0 +1,240 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Network {
+  mainnet
+  testnet
+}
+
+enum PoolStatus {
+  healthy
+  low
+  critical
+  empty
+}
+
+enum AgentStatus {
+  active
+  limit_reached
+  suspended
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  settled
+  failed
+}
+
+enum WebhookEvent {
+  payment_settled
+  payment_failed
+  pool_low
+}
+
+enum AuditAction {
+  api_key_created
+  api_key_revoked
+  gas_pool_created
+  gas_pool_topup
+  agent_created
+  agent_suspended
+  payment_initiated
+  payment_settled
+  payment_failed
+  webhook_registered
+  webhook_deleted
+  webhook_secret_rotated
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  githubId     String?  @unique
+  githubHandle String?
+  googleId     String?  @unique
+  name         String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  apiKeys       ApiKey[]
+  gasPools      GasPool[]
+  agents        Agent[]
+  payments      Payment[]
+  webhooks      Webhook[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  keyPrefix   String
+  name        String
+  companyName String
+  network     Network  @default(testnet)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  gasPool GasPool?
+
+  @@map("api_keys")
+}
+
+model GasPool {
+  id                 String     @id @default(uuid())
+  userId             String
+  apiKeyId           String     @unique
+  balanceUsdc        BigInt     @default(0)
+  dailyCapCents      Int        @default(0)
+  alertThresholdUsdc BigInt     @default(0)
+  status             PoolStatus @default(empty)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  apiKey   ApiKey    @relation(fields: [apiKeyId], references: [id])
+  agents   Agent[]
+  payments Payment[]
+
+  @@map("gas_pools")
+}
+
+model Agent {
+  id                  String      @id @default(uuid())
+  userId              String
+  poolId              String
+  name                String
+  algoAddress         String      @unique
+  dailyLimitCents     Int
+  dailySpentCents     Int         @default(0)
+  vendorWhitelistHash String
+  status              AgentStatus @default(active)
+  lastResetAt         DateTime    @default(now())
+  algoTxnId           String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  pool     GasPool   @relation(fields: [poolId], references: [id])
+  payments Payment[]
+
+  @@index([userId])
+  @@index([poolId])
+  @@index([status])
+  @@map("agents")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  invoiceId      String        @unique
+  userId         String
+  agentId        String
+  poolId         String
+  status         PaymentStatus @default(pending)
+  amountUsdCents Int
+  amountUsdc     String?
+  algoTxnId      String?
+  blockRound     Int?
+  confirmedAt    DateTime?
+  gasSponsored   Boolean       @default(true)
+  gasFeeAlgo     String?
+  noahReference  String?
+  network        Network       @default(testnet)
+  timeline       Json          @default("[]")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user  User    @relation(fields: [userId], references: [id])
+  agent Agent   @relation(fields: [agentId], references: [id])
+  pool  GasPool @relation(fields: [poolId], references: [id])
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId, status])
+  @@map("payments")
+}
+
+model WebhookDelivery {
+  id          String       @id @default(uuid())
+  webhookId   String
+  paymentId   String?
+  event       WebhookEvent
+  httpStatus  Int?
+  retries     Int          @default(0)
+  success     Boolean      @default(false)
+  payload     Json
+  deliveredAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  webhook Webhook @relation(fields: [webhookId], references: [id])
+
+  @@index([webhookId])
+  @@index([success])
+  @@index([createdAt])
+  @@map("webhook_deliveries")
+}
+
+model Webhook {
+  id        String         @id @default(uuid())
+  userId    String
+  url       String
+  events    WebhookEvent[]
+  secret    String
+  active    Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user       User              @relation(fields: [userId], references: [id])
+  deliveries WebhookDelivery[]
+
+  @@map("webhooks")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id        String      @id @default(uuid())
+  userId    String
+  action    AuditAction
+  metadata  Json?
+  ipAddress String?
+  requestId String?
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
