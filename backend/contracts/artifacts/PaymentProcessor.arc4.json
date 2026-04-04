@@ -1,0 +1,74 @@
+{
+  "name": "PaymentProcessor",
+  "desc": "",
+  "methods": [
+    {
+      "name": "createApplication",
+      "args": [
+        {
+          "name": "registryAppId",
+          "type": "uint64"
+        },
+        {
+          "name": "usdcAssetId",
+          "type": "uint64"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "optInToUsdc",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "processPayment",
+      "desc": "payer constructs atomic group:\n  txn[0]: USDC ASA xfer - this contract\n  txn[1]: this app call (invoiceId, merchantId, amount)",
+      "args": [
+        {
+          "name": "invoiceId",
+          "type": "byte[]"
+        },
+        {
+          "name": "merchantId",
+          "type": "byte[]"
+        },
+        {
+          "name": "amountUsdc",
+          "type": "uint64"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "isSettled",
+      "args": [
+        {
+          "name": "invoiceId",
+          "type": "byte[]"
+        }
+      ],
+      "returns": {
+        "type": "bool"
+      }
+    },
+    {
+      "name": "getSettledAt",
+      "args": [
+        {
+          "name": "invoiceId",
+          "type": "byte[]"
+        }
+      ],
+      "returns": {
+        "type": "uint64"
+      }
+    }
+  ]
+}

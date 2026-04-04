@@ -1,0 +1,81 @@
+{
+  "name": "MerchantRegistry",
+  "desc": "",
+  "methods": [
+    {
+      "name": "createApplication",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "registerMerchant",
+      "args": [
+        {
+          "name": "merchantId",
+          "type": "byte[]"
+        },
+        {
+          "name": "primaryAccount",
+          "type": "address"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "addAccount",
+      "args": [
+        {
+          "name": "merchantId",
+          "type": "byte[]"
+        },
+        {
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "deactivateMerchant",
+      "args": [
+        {
+          "name": "merchantId",
+          "type": "byte[]"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "getMerchantAddress",
+      "args": [
+        {
+          "name": "merchantId",
+          "type": "byte[]"
+        }
+      ],
+      "returns": {
+        "type": "address"
+      }
+    },
+    {
+      "name": "isMerchantActive",
+      "args": [
+        {
+          "name": "merchantId",
+          "type": "byte[]"
+        }
+      ],
+      "returns": {
+        "type": "bool"
+      }
+    }
+  ]
+}
