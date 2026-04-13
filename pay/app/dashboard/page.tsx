@@ -26,7 +26,7 @@ export default function DashboardPage() {
               <p className="text-sm uppercase tracking-wide text-slate-400">
                 {card.title}
               </p>
-              <p className="mt-2 text-5xl uppercase leading-none text-slate-100">
+              <p className="mt-2 text-4xl uppercase leading-none font-impact text-slate-100">
                 {card.value}
               </p>
               <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-[#f2ad2d]">
@@ -119,7 +119,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-3 py-3">
                         <span
-                          className={`rounded-full border px-2 py-1 text-xs font-semibold ${
+                          className={`rounded-full border px-2 py-1 text-xs ${
                             statusClasses[invoice.status]
                           }`}
                         >
@@ -160,7 +160,7 @@ export default function DashboardPage() {
             <p className="text-sm uppercase tracking-wide">
               Gas Pool
             </p>
-            <p className="mt-1 text-5xl tracking-tighter">420.00 USDC</p>
+            <p className="mt-1 text-5xl font-impact tracking-tight">420.00 USDC</p>
             <p className="text-right text-sm">≈ 24,580 ALGO</p>
 
             <div className="bg-black p-4 rounded-lg text-white mt-2 flex flex-col">
