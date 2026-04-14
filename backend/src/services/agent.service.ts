@@ -11,7 +11,8 @@ async function registerAgentOnChain(params: {
 }): Promise<string> {
 
     logger.warn('registerAgentOnChain', params);
-    return 'TODO: register agent on chain';
+    // on-chain agent registry not yet built — implement when contract supports it
+    return 'db_only';
 }
 
 export async function getAgentStatusOnChain(algoAddr: string): Promise<{
@@ -58,7 +59,6 @@ export async function createAgent(params: {
     vendorWhitelistHash: string
 }) {
     try {
-        // TODO :  registerAgentOnChain
         const algoTxnId = await registerAgentOnChain({
             agentAddr: params.algoAddr,
             dailyLimitCents: params.dailyLimitCents,

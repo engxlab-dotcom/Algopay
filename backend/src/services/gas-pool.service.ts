@@ -69,8 +69,7 @@ export async function getGasPoolBalance(apiKeyId: string) {
     if (!pool) {
         throw new Error('Gas pool not found')
     }
-    // TODO
-    // const onChainBalance = await getOnChainBalance(pool.id)
+    // sync on-chain USDC balance here when ready (getOnChainBalance)
 
     const estimatedTxnsRemaining = pool.balanceUsdc / 1000n;
 
@@ -97,8 +96,7 @@ export async function topUpGasPool(params: {
         throw new Error('Gas pool not found')
     }
 
-    // TODO : verify on-chain deposit verfy txnId
-    // verifyOnChainDeposit(params.txnId, params.amountUsdc, pool.id)
+    // verify txnId on-chain before crediting (verifyOnChainDeposit)
 
     const newBalance = pool.balanceUsdc + params.amountUsdc
     const newStatus = checkStatus(newBalance, pool.alertThresholdUsdc)

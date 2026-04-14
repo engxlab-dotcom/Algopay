@@ -16,7 +16,6 @@ export class AlgoStackRequestError extends Error {
         this.name = 'AlgoStackRequestError'
         this.code = code
         this.status = status
-
     }
 }
 
