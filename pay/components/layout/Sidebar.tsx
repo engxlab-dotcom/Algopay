@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Bot,
+  FlaskConical,
   Fuel,
   HandCoins,
   Home,
@@ -21,7 +22,8 @@ const sidebarItems = [
   { key: "agents", label: "Agents", href: "/agents" },
   { key: "merchants", label: "Merchants", href: "/merchants" },
   { key: "gas", label: "Gas", href: "/gas" },
-  { key: "webhooks", label: "Web Hooks", href: "/webhooks" },
+  { key: "playground", label: "Playground", href: "/playground" },
+  // { key: "webhooks", label: "Web Hooks", href: "/webhooks" },
   { key: "apihooks", label: "Api Hooks", href: "/api-hooks" },
   { key: "settings", label: "Settings", href: "/settings" },
 ];
@@ -32,6 +34,7 @@ const iconByKey: Record<string, LucideIcon> = {
   agents: Bot,
   merchants: Store,
   gas: Fuel,
+  playground: FlaskConical,
   webhooks: Webhook,
   apihooks: Webhook,
   settings: Settings,
