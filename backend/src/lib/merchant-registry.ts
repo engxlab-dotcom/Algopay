@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import arc32Json from '../../contracts/artifacts/MerchantRegistry.arc4.json'
+import arc4Json from '../../contracts/artifacts/MerchantRegistry.arc4.json'
 import { getAlgodClient, getDeployerAccount } from './algorand'
 
 export async function registerMerchantOnChain(params: {
@@ -15,7 +15,7 @@ export async function registerMerchantOnChain(params: {
     if (!registryId) throw new Error('MERCHANT_REGISTRY_APP_ID not set')
 
     const sp = await algod.getTransactionParams().do()
-    const iface = new algosdk.ABIInterface(arc32Json.contract)
+    const iface = new algosdk.ABIInterface(arc4Json)
     const method = iface.getMethodByName('registerMerchant')
 
     const merchantBytes = new Uint8Array(Buffer.from(params.merchantId))
