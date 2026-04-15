@@ -54,7 +54,7 @@ console.log('\n0. ensuring merchant registered...')
 
     if (!alreadyRegistered) {
         const registryArc32 = JSON.parse(readFileSync(
-            join(__dirname, '../contracts/artifacts/MerchantRegistry.arc32.json'), 'utf-8'
+            join(__dirname, '../contracts/artifacts/MerchantRegistry.arc4.json'), 'utf-8'
         ))
         const iface = new algosdk.ABIInterface(registryArc32.contract)
         const method = iface.getMethodByName('registerMerchant')
@@ -121,7 +121,7 @@ console.log(`  lsig address: ${lsigAddr}`)
 console.log('\n3. processPayment (gas sponsored)...')
 {
     const processorArc32 = JSON.parse(readFileSync(
-        join(__dirname, '../contracts/artifacts/PaymentProcessor.arc32.json'), 'utf-8'
+        join(__dirname, '../contracts/artifacts/PaymentProcessor.arc4.json'), 'utf-8'
     ))
     const iface = new algosdk.ABIInterface(processorArc32.contract)
     const method = iface.getMethodByName('processPayment')

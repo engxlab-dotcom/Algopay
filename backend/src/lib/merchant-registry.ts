@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import arc32Json from '../../contracts/artifacts/MerchantRegistry.arc32.json'
+import arc32Json from '../../contracts/artifacts/MerchantRegistry.arc4.json'
 import { getAlgodClient, getDeployerAccount } from './algorand'
 
 export async function registerMerchantOnChain(params: {

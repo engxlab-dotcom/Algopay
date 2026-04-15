@@ -19,7 +19,7 @@ async function main() {
   console.log(`Deployer: ${addr}`)
 
   console.log('\nDeploying MerchantRegistry...')
-  const registryArc32 = JSON.parse(fs.readFileSync(path.join(ARTIFACTS, 'MerchantRegistry.arc32.json'), 'utf-8'))
+  const registryArc32 = JSON.parse(fs.readFileSync(path.join(ARTIFACTS, 'MerchantRegistry.arc4.json'), 'utf-8'))
   const registryFactory = algorand.client.getAppFactory({
     appSpec: registryArc32,
     defaultSender: addr,
@@ -32,7 +32,7 @@ async function main() {
   console.log(`MerchantRegistry address: ${registryAppAddress}`)
 
   console.log('\nDeploying PaymentProcessor...')
-  const processorArc32 = JSON.parse(fs.readFileSync(path.join(ARTIFACTS, 'PaymentProcessor.arc32.json'), 'utf-8'))
+  const processorArc32 = JSON.parse(fs.readFileSync(path.join(ARTIFACTS, 'PaymentProcessor.arc4.json'), 'utf-8'))
   const processorFactory = algorand.client.getAppFactory({
     appSpec: processorArc32,
     defaultSender: addr,

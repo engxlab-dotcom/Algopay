@@ -6,5 +6,5 @@ node_modules
 dist/
 .env
 .env.local
-*.arc32.json
+*.arc4.json
 *.teal.tok
