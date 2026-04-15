@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Fuel, Pencil, X, ArrowUpCircle } from "lucide-react";
+import { Fuel, Pencil, X, ArrowUpCircle, Copy, Check } from "lucide-react";
 import algosdk from "algosdk";
 import { useWallet } from "@txnlab/use-wallet-react";
 import { api, ApiError } from "@/lib/api";
@@ -38,6 +38,13 @@ export default function GasPage() {
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [topUpError, setTopUpError] = useState<string | null>(null);
   const [topUpSuccess, setTopUpSuccess] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyId(id: string) {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  }
 
   const fetchPools = useCallback(async () => {
     setLoading(true);
@@ -195,6 +202,17 @@ export default function GasPage() {
                       <td className="px-4 py-3">
                         <p className="font-medium">{pool.apiKey?.name ?? "—"}</p>
                         <p className="font-mono text-xs text-slate-500">{pool.apiKey?.keyPrefix}...</p>
+                        <button
+                          type="button"
+                          onClick={() => copyId(pool.id)}
+                          className="mt-1 flex items-center gap-1 font-mono text-xs text-slate-600 hover:text-slate-300"
+                          title="Copy pool ID"
+                        >
+                          {copiedId === pool.id
+                            ? <><Check className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">copied</span></>
+                            : <><Copy className="h-3 w-3" />{pool.id.slice(0, 8)}...</>
+                          }
+                        </button>
                       </td>
                       <td className="px-4 py-3 font-medium">{formatUsdc(pool.balanceUsdc)}</td>
                       <td className="px-4 py-3">

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
+import type { GasPool } from "@/lib/types";
 
 export default function CreateAgentPage() {
   const router = useRouter();
@@ -16,8 +17,13 @@ export default function CreateAgentPage() {
     poolId: "",
     vendorWhitelistHash: "",
   });
+  const [pools, setPools] = useState<GasPool[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<GasPool[]>("/gas-pool").then(setPools).catch(() => {});
+  }, []);
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -103,14 +109,30 @@ export default function CreateAgentPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-slate-300">Gas Pool ID</label>
-              <input
-                required
-                value={form.poolId}
-                onChange={(e) => set("poolId", e.target.value)}
-                className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-slate-100 placeholder:text-slate-500"
-                placeholder="UUID of a funded gas pool"
-              />
+              <label className="mb-1 block text-sm text-slate-300">Gas Pool</label>
+              {pools.length > 0 ? (
+                <select
+                  required
+                  value={form.poolId}
+                  onChange={(e) => set("poolId", e.target.value)}
+                  className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-slate-100"
+                >
+                  <option value="">Select a gas pool</option>
+                  {pools.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.apiKey?.name ?? p.id.slice(0, 8)} — {(Number(p.balanceUsdc) / 1_000_000).toFixed(2)} USDC ({p.status})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  required
+                  value={form.poolId}
+                  onChange={(e) => set("poolId", e.target.value)}
+                  className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-slate-100 placeholder:text-slate-500"
+                  placeholder="UUID of a funded gas pool"
+                />
+              )}
             </div>
 
             <div>
