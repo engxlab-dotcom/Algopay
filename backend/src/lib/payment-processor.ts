@@ -35,6 +35,30 @@ function invoiceLease(invoiceId: string): Uint8Array {
     return new Uint8Array(crypto.createHash('sha256').update(invoiceId).digest())
 }
 
+async function ensureDeployerOptedIn(
+    algod: algosdk.Algodv2,
+    signerAddr: string,
+    signer: algosdk.TransactionSigner,
+    usdcId: number,
+): Promise<void> {
+    const info = await algod.accountInformation(signerAddr).do()
+    const assets: Array<{ assetId: bigint | number }> = (info as { assets?: Array<{ assetId: bigint | number }> }).assets ?? []
+    const alreadyOptedIn = assets.some((a) => Number(a.assetId) === usdcId)
+    if (alreadyOptedIn) return
+
+    const sp = await algod.getTransactionParams().do()
+    const optInTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        sender: signerAddr,
+        receiver: signerAddr,
+        assetIndex: usdcId,
+        amount: 0,
+        suggestedParams: { ...sp, fee: MIN_FEE, flatFee: true },
+    })
+    const atc = new algosdk.AtomicTransactionComposer()
+    atc.addTransaction({ txn: optInTxn, signer })
+    await atc.execute(algod, 4)
+}
+
 export async function submitOnChainPayment(params: {
     amountUsdc: bigint
     invoiceId: string
@@ -47,6 +71,8 @@ export async function submitOnChainPayment(params: {
     const appId = getProcessorAppId()
     const processorAddr = getProcessorAddress()
     const usdcId = USDC_ASSET_ID[net]
+
+    await ensureDeployerOptedIn(algod, signerAddr, signer, usdcId)
 
     const sp = await algod.getTransactionParams().do()
     const lsig = await getGasPoolLsig(algod)
