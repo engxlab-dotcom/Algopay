@@ -22,12 +22,7 @@ export class ApiError extends Error {
 
 async function refreshToken(): Promise<string | null> {
   try {
-    const res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({}),
-    });
+    const res = await fetch("/api/auth/refresh", { method: "POST" });
     if (!res.ok) return null;
     const data = await res.json();
     return data.accessToken ?? null;
@@ -50,7 +45,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (res.status === 401 && !path.includes("/auth/")) {
-    // deduplicate concurrent refresh calls
     if (!_refreshing) {
       _refreshing = refreshToken().finally(() => { _refreshing = null; });
     }
@@ -70,7 +64,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       }
       return retry.json() as Promise<T>;
     }
-    // refresh failed — clear token, let caller handle redirect
     _token = null;
     throw new ApiError(401, "Session expired. Please log in again.");
   }

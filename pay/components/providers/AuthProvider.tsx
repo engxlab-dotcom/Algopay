@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api, setApiToken, clearApiToken } from "@/lib/api";
 
@@ -27,7 +34,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-const AUTH_PATHS = ["/login", "/auth/callback"];
+const AUTH_PATHS = ["/login", "/auth/callback", "/auth/error"];
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -41,7 +48,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const data = await api.post<{ accessToken: string }>("/auth/refresh", {});
+      const res = await fetch("/api/auth/refresh", { method: "POST" });
+      if (!res.ok) throw new Error("refresh failed");
+      const data = await res.json();
       setApiToken(data.accessToken);
       const me = await api.get<User>("/auth/me");
       setUser(me);
