@@ -1,15 +1,15 @@
 {
   "name": "algopay-stack",
   "version": "0.2.0",
-  "description": "Algopay SDK — Algorand USDC payments for AI agents and businesses",
+  "description": "Algopay SDK \u2014 Algorand USDC payments for AI agents and businesses",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "node init && tsc",
+    "dev": "node init && tsc --watch",
     "clean": "rm -rf dist",
     "prepublish": "npm run clean && npm run build"
   },
