@@ -45,7 +45,6 @@ export default function SettingsPage() {
       setKeys((prev) => prev.filter((k) => k.id !== revokeTarget.id));
       setRevokeTarget(null);
     } catch {
-      // silent — key stays in list
     } finally {
       setRevoking(false);
     }
@@ -210,7 +209,7 @@ export default function SettingsPage() {
         )}
       </section>
 
-      <section className="rounded-md border border-slate-800 bg-[#1d1f22] p-4">
+      {/* <section className="rounded-md border border-slate-800 bg-[#1d1f22] p-4">
         <h2 className="border-b border-slate-700 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
           Account
         </h2>
@@ -220,7 +219,7 @@ export default function SettingsPage() {
             Edit Profile
           </Link>
         </div>
-      </section>
+      </section> */}
 
       <section className="rounded-md border border-red-900 bg-red-950/25 p-4">
         <h2 className="border-b border-red-900 pb-2 text-xs font-semibold uppercase tracking-wide text-red-400">
