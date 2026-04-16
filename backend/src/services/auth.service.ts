@@ -41,16 +41,21 @@ async function createRefreshToken(userId: string): Promise<string> {
 }
 
 async function upsertUser(profile: IUser, provider: 'github' | 'google') {
+    const emailTaken = profile.email
+        ? await db.user.findUnique({ where: { email: profile.email } })
+        : null
+
+    const safeEmail = emailTaken ? null : profile.email || null
+
     if (provider === 'github') {
         return db.user.upsert({
             where: { githubId: profile.providerId },
             update: {
                 name: profile.name,
                 avatarUrl: profile.avatarUrl,
-                email: profile.email || undefined,
             },
             create: {
-                email: profile.email || null,
+                email: safeEmail,
                 name: profile.name,
                 avatarUrl: profile.avatarUrl,
                 githubId: profile.providerId,
@@ -64,10 +69,9 @@ async function upsertUser(profile: IUser, provider: 'github' | 'google') {
         update: {
             name: profile.name,
             avatarUrl: profile.avatarUrl,
-            email: profile.email || undefined,
         },
         create: {
-            email: profile.email || null,
+            email: safeEmail,
             name: profile.name,
             avatarUrl: profile.avatarUrl,
             googleId: profile.providerId,
@@ -159,10 +163,7 @@ export async function handleDevLogin() {
     let user = await db.user.findFirst({ where: { email: 'demo@algopay.dev' } })
     if (!user) {
         user = await db.user.create({
-           data: {
-                email: 'demo@algopay.dev',
-                name: 'Demo User',
-            },
+            data: { email: 'demo@algopay.dev', name: 'Demo User' },
         })
     }
     const accessToken = signAccessToken({
