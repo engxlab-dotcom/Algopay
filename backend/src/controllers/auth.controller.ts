@@ -11,6 +11,12 @@ import {
 } from '../services/auth.service'
 import { logger } from '../lib/logger'
 
+const COOKIE_BASE = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none' as const,
+}
+
 export async function githubLogin(_req: Request, res: Response): Promise<void> {
     res.redirect(getGitHubAuthUrl())
 }
@@ -18,27 +24,17 @@ export async function githubLogin(_req: Request, res: Response): Promise<void> {
 export async function githubCallback(req: Request, res: Response): Promise<void> {
     const code = req.query.code as string
     if (!code) {
-        res.status(400).json({ error: 'Missing code' })
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?reason=missing_code`)
         return
     }
     try {
         const { accessToken, refreshToken } = await handleGitHubCallback(code)
-        res.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-        })
-        res.cookie('access_token', accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 15 * 60 * 1000,
-        })
+        res.cookie('refresh_token', refreshToken, { ...COOKIE_BASE, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        res.cookie('access_token', accessToken, { ...COOKIE_BASE, maxAge: 15 * 60 * 1000 })
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     } catch (err) {
         if (err instanceof Error) logger.error('GitHub callback failed', err)
-        res.status(500).json({ error: 'GitHub auth failed' })
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?reason=github_failed`)
     }
 }
 
@@ -49,29 +45,17 @@ export async function googleLogin(_req: Request, res: Response): Promise<void> {
 export async function googleCallback(req: Request, res: Response): Promise<void> {
     const code = req.query.code as string
     if (!code) {
-        res.status(400).json({ error: 'Missing code' })
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?reason=missing_code`)
         return
     }
     try {
         const { accessToken, refreshToken } = await handleGoogleCallback(code)
-        res.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-        })
-        res.cookie('access_token', accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 15 * 60 * 1000,
-        })
+        res.cookie('refresh_token', refreshToken, { ...COOKIE_BASE, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        res.cookie('access_token', accessToken, { ...COOKIE_BASE, maxAge: 15 * 60 * 1000 })
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     } catch (err) {
-        if (err instanceof Error) {
-            logger.error('Google callback failed', err)
-        }
-        res.status(500).json({ error: 'Google auth failed' })
+        if (err instanceof Error) logger.error('Google callback failed', err)
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?reason=google_failed`)
     }
 }
 
@@ -93,9 +77,7 @@ export async function me(req: Request, res: Response): Promise<void> {
             createdAt: user.createdAt,
         })
     } catch (err) {
-        if (err instanceof Error) {
-            logger.error('Failed to fetch user', err)
-        }
+        if (err instanceof Error) logger.error('Failed to fetch user', err)
         res.status(500).json({ error: 'Failed to fetch user' })
     }
 }
@@ -108,25 +90,11 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     }
     try {
         const result = await refreshAccessToken(token)
-
-        res.cookie('refresh_token', result.refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-        })
-        res.cookie('access_token', result.accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 15 * 60 * 1000,
-        })
-
+        res.cookie('refresh_token', result.refreshToken, { ...COOKIE_BASE, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        res.cookie('access_token', result.accessToken, { ...COOKIE_BASE, maxAge: 15 * 60 * 1000 })
         res.json({ accessToken: result.accessToken })
     } catch (err) {
-        if (err instanceof Error) {
-            res.status(401).json({ error: err.message })
-        }
+        if (err instanceof Error) res.status(401).json({ error: err.message })
     }
 }
 
@@ -135,8 +103,8 @@ export async function logout(req: Request, res: Response): Promise<void> {
     if (token) {
         await revokeRefreshToken(token)
     }
-    res.clearCookie('refresh_token')
-    res.clearCookie('access_token')
+    res.clearCookie('refresh_token', COOKIE_BASE)
+    res.clearCookie('access_token', COOKIE_BASE)
     res.json({ success: true })
 }
 
