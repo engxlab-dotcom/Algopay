@@ -31,7 +31,14 @@ export class ApiError extends Error {
 
 async function refreshToken(): Promise<string | null> {
   try {
-    const res = await fetch("/api/auth/refresh", { method: "POST" });
+    // call the backend directly so the browser sends the httpOnly refresh_token
+    // cookie (which lives on the backend domain, not the frontend domain)
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({}),
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return data.accessToken ?? null;
@@ -73,7 +80,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       }
       return retry.json() as Promise<T>;
     }
-    _token = null;
+    clearApiToken();
     throw new ApiError(401, "Session expired. Please log in again.");
   }
 
