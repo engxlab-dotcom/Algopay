@@ -3,9 +3,7 @@ import { GitHubProvider } from '../auth/providers/github.provider'
 import { GoogleProvider } from '../auth/providers/google.provider'
 import { IUser } from '../auth/types/provider'
 import { db } from '../../db/client'
-import { signAccessToken, signJwt } from '../lib/jwt'
-import { signRefreshToken } from '../lib/jwt'
-
+import { signAccessToken, signRefreshToken } from '../lib/jwt'
 
 function github() {
     return new GitHubProvider({
@@ -29,56 +27,54 @@ function generateState(): string {
 
 async function createRefreshToken(userId: string): Promise<string> {
     const token = signRefreshToken()
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
     await db.refreshToken.deleteMany({
-        where: {
-            userId, expiresAt: { lt: new Date() },
-        }
+        where: { userId, expiresAt: { lt: new Date() } },
     })
-    
+
     await db.refreshToken.create({
-        data: { userId, token, expiresAt }
+        data: { userId, token, expiresAt },
     })
 
     return token
 }
 
-async function upsertUser(
-    profile: IUser,
-    provider: 'github' | 'google'
-) {
-    const where =
-        provider === 'github'
-            ? { githubId: profile.providerId }
-            : { googleId: profile.providerId }
-
-    const existing = await db.user.findFirst({ where })
-
-    if (existing) {
-        return db.user.update({
-            where: { id: existing.id },
-            data: {
+async function upsertUser(profile: IUser, provider: 'github' | 'google') {
+    if (provider === 'github') {
+        return db.user.upsert({
+            where: { githubId: profile.providerId },
+            update: {
                 name: profile.name,
                 avatarUrl: profile.avatarUrl,
-                email: profile.email || existing.email,
+                email: profile.email || undefined,
+            },
+            create: {
+                email: profile.email || null,
+                name: profile.name,
+                avatarUrl: profile.avatarUrl,
+                githubId: profile.providerId,
+                githubHandle: profile.name,
             },
         })
     }
 
-    return db.user.create({
-        data: {
+    return db.user.upsert({
+        where: { googleId: profile.providerId },
+        update: {
+            name: profile.name,
+            avatarUrl: profile.avatarUrl,
+            email: profile.email || undefined,
+        },
+        create: {
             email: profile.email || null,
             name: profile.name,
             avatarUrl: profile.avatarUrl,
-            githubId: provider === 'github' ? profile.providerId : undefined,
-            githubHandle: provider === 'github' ? profile.name : undefined,
-            googleId: provider === 'google' ? profile.providerId : undefined,
+            googleId: profile.providerId,
         },
     })
 }
 
-// github
 export function getGitHubAuthUrl(): string {
     return github().getAuthUrl(generateState())
 }
@@ -98,7 +94,6 @@ export async function handleGitHubCallback(code: string) {
     return { user, accessToken, refreshToken }
 }
 
-// google
 export function getGoogleAuthUrl(): string {
     return google().getAuthUrl(generateState())
 }
@@ -107,6 +102,7 @@ export async function handleGoogleCallback(code: string) {
     const tokens = await google().exchangeCodeForToken(code)
     const profile = await google().getUserProfile(tokens.accessToken)
     const user = await upsertUser(profile, 'google')
+
     const accessToken = signAccessToken({
         id: user.id,
         provider: 'google',
@@ -155,7 +151,6 @@ export async function refreshAccessToken(refreshToken: string) {
     return { accessToken, refreshToken: newTokenValue }
 }
 
-
 export async function revokeRefreshToken(token: string) {
     await db.refreshToken.deleteMany({ where: { token } })
 }
@@ -164,7 +159,7 @@ export async function handleDevLogin() {
     let user = await db.user.findFirst({ where: { email: 'demo@algopay.dev' } })
     if (!user) {
         user = await db.user.create({
-            data: {
+           data: {
                 email: 'demo@algopay.dev',
                 name: 'Demo User',
             },

@@ -37,9 +37,7 @@ export async function githubCallback(req: Request, res: Response): Promise<void>
         })
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     } catch (err) {
-        if (err instanceof Error) {
-            logger.error('GitHub callback failed', err)
-        }
+        if (err instanceof Error) logger.error('GitHub callback failed', err)
         res.status(500).json({ error: 'GitHub auth failed' })
     }
 }
@@ -117,6 +115,12 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
             sameSite: 'none',
             maxAge: 30 * 24 * 60 * 60 * 1000,
         })
+        res.cookie('access_token', result.accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 15 * 60 * 1000,
+        })
 
         res.json({ accessToken: result.accessToken })
     } catch (err) {
@@ -132,6 +136,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
         await revokeRefreshToken(token)
     }
     res.clearCookie('refresh_token')
+    res.clearCookie('access_token')
     res.json({ success: true })
 }
 
