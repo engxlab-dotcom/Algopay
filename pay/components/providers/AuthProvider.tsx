@@ -9,7 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { api, setApiToken, clearApiToken } from "@/lib/api";
+import { api, setApiToken, clearApiToken, loadStoredToken } from "@/lib/api";
 
 interface User {
   id: string;
@@ -39,7 +39,19 @@ const AUTH_PATHS = ["/login", "/auth/callback", "/auth/error"];
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const USER_KEY = "algopay_user";
+
+  function cachedUser(): User | null {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? (JSON.parse(raw) as User) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  const [user, setUser] = useState<User | null>(cachedUser);
   const [ready, setReady] = useState(false);
 
   const bootstrap = useCallback(async () => {
@@ -47,6 +59,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setReady(true);
       return;
     }
+    const stored = loadStoredToken();
+    if (stored) setApiToken(stored);
     try {
       const res = await fetch("/api/auth/refresh", { method: "POST" });
       if (!res.ok) throw new Error("refresh failed");
@@ -54,9 +68,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setApiToken(data.accessToken);
       const me = await api.get<User>("/auth/me");
       setUser(me);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(USER_KEY, JSON.stringify(me));
+      }
     } catch {
       clearApiToken();
       setUser(null);
+      if (typeof window !== "undefined") localStorage.removeItem(USER_KEY);
       router.replace("/login");
     } finally {
       setReady(true);
@@ -73,6 +91,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
     clearApiToken();
     setUser(null);
+    if (typeof window !== "undefined") localStorage.removeItem(USER_KEY);
     router.replace("/login");
   }, [router]);
 
